@@ -1,12 +1,17 @@
 # Python
-backend/.venv/
-backend/venv/
-backend/__pycache__/
-backend/.env
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.mypy_cache/
 
 # Flutter
-mobile/**/.dart_tool/
-mobile/**/build/
-mobile/**/.packages
-mobile/**/.flutter-plugins*
-mobile/**/.metadata
+.dart_tool/
+build/
+.packages
+.flutter-plugins*
+.metadata
+
+# macOS
+.DS_Store
