@@ -1,0 +1,11 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/.env
+
+# Flutter
+mobile/**/.dart_tool/
+mobile/**/build/
+mobile/**/.packages
+mobile/**/.flutter-plugins*
+mobile/**/.metadata
