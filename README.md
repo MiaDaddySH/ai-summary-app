@@ -12,14 +12,10 @@ Users can paste any article URL or text and receive concise summaries in both En
 
 ## Demo Screenshot
 
-![App Screenshot](screenshots/iphone1.png)
-![App Screenshot](screenshots/iphone2.png)
-![App Screenshot](screenshots/iphone3.png)
-
 <p align="center">
-  <img src="screenshots/iphone1.png" width="280"/>
-  <img src="screenshots/iphone2.png" width="280"/>
-  <img src="screenshots/iphone3.png" width="280"/>
+  <img src="screenshots/iphone1.png" width="30%" style="margin-right:10px;"/>
+  <img src="screenshots/iphone2.png" width="30%" style="margin-right:10px;"/>
+  <img src="screenshots/iphone3.png" width="30%"/>
 </p>
 
 ---
