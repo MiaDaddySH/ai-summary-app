@@ -1,52 +1,89 @@
+![Flutter](https://img.shields.io/badge/Flutter-Mobile-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![Azure OpenAI](https://img.shields.io/badge/Azure-OpenAI-purple)
+
 # AI Summary App
 
-AI-powered article summarization application.
+An AI-powered mobile application that summarizes web articles using Large Language Models.
+
+Users can paste any article URL or text and receive concise summaries in both English and Chinese.
+
+---
+
+## Demo Screenshot
+
+![App Screenshot](screenshots/iphone1.png)
+![App Screenshot](screenshots/iphone2.png)
+![App Screenshot](screenshots/iphone3.png)
+
+---
+
+## Features
+
+- Summarize articles from URL
+- Extract main content from webpages
+- Generate summaries using AI
+- English + Chinese summaries
+- Mobile UI built with Flutter
+- Backend API built with FastAPI
+- Azure OpenAI integration
+
+---
 
 ## Tech Stack
+
+Frontend
+- Flutter
 
 Backend
 - FastAPI
 - Python
 
-Frontend
-- Flutter
-
 AI
-- Azure OpenAI API
+- Azure OpenAI
+
+Web Content Extraction
+- Readability
+- BeautifulSoup
+
+---
 
 ## Architecture
 
 Flutter App
-      ↓
-FastAPI
-      ↓
-LLM API
+↓
+FastAPI Backend
+↓
+Article Fetcher
+↓
+Azure OpenAI
+↓
+Summary Response
 
-## API Example
 
-POST /summarize
+---
 
-Request
+## How to Run
 
-{
- "text": "Large language models are transforming AI."
-}
+### Backend
 
-Response
-
-{
- "summary": "LLMs are transforming artificial intelligence."
-}
-
-## Run Locally
-
-Backend
-
+```
 cd backend
-pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
 
-Mobile
-
+### Mobile
+```
 cd mobile/ai_summary_app
 flutter run
+
+
+---
+
+## Future Improvements
+
+- History of summarized articles
+- Share summaries
+- Support PDF summarization
+- Support more languages
+
