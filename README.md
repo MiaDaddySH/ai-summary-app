@@ -2,6 +2,8 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
 ![Azure OpenAI](https://img.shields.io/badge/Azure-OpenAI-purple)
 
+Version: v0.1
+
 # AI Summary App
 
 An AI-powered mobile application that summarizes web articles using Large Language Models.
