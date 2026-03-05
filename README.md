@@ -16,6 +16,12 @@ Users can paste any article URL or text and receive concise summaries in both En
 ![App Screenshot](screenshots/iphone2.png)
 ![App Screenshot](screenshots/iphone3.png)
 
+<p align="center">
+  <img src="screenshots/iphone1.png" width="280"/>
+  <img src="screenshots/iphone2.png" width="280"/>
+  <img src="screenshots/iphone3.png" width="280"/>
+</p>
+
 ---
 
 ## Features
