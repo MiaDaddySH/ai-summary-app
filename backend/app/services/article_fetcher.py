@@ -1,11 +1,12 @@
+import time
 import httpx
 from readability import Document
 from bs4 import BeautifulSoup
 
-# 一些站点会对默认 UA 直接返回空/机器人页
 DEFAULT_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    "User-Agent": "AI-Summary-App/0.1 (contact: your-email@example.com)",
+    "Accept": "text/html,application/xhtml+xml",
+    "Accept-Language": "en-US,en;q=0.9",
 }
 
 def fetch_article_text(url: str, timeout: float = 15.0) -> str:
@@ -13,24 +14,43 @@ def fetch_article_text(url: str, timeout: float = 15.0) -> str:
     if not url.startswith(("http://", "https://")):
         raise ValueError("URL must start with http:// or https://")
 
-    with httpx.Client(follow_redirects=True, headers=DEFAULT_HEADERS, timeout=timeout) as client:
-        r = client.get(url)
-        r.raise_for_status()
+    last_err: Exception | None = None
 
-    # readability 提取“正文 HTML”
-    doc = Document(r.text)
-    article_html = doc.summary()
+    for attempt in range(3):
+        try:
+            with httpx.Client(
+                follow_redirects=True,
+                headers=DEFAULT_HEADERS,
+                timeout=timeout,
+            ) as client:
+                r = client.get(url)
 
-    # 用 BeautifulSoup 把正文 HTML 转为纯文本
-    soup = BeautifulSoup(article_html, "lxml")
+            # 如果被限流，等一会儿再试（指数退避）
+            if r.status_code == 429:
+                sleep_s = 1.0 * (2 ** attempt)
+                time.sleep(sleep_s)
+                last_err = httpx.HTTPStatusError("429 Too Many Requests", request=r.request, response=r)
+                continue
 
-    # 去掉脚本/样式
-    for tag in soup(["script", "style", "noscript"]):
-        tag.decompose()
+            r.raise_for_status()
 
-    text = soup.get_text(separator="\n")
-    # 清理空行
-    lines = [ln.strip() for ln in text.splitlines()]
-    cleaned = "\n".join([ln for ln in lines if ln])
+            doc = Document(r.text)
+            article_html = doc.summary()
 
-    return cleaned
+            soup = BeautifulSoup(article_html, "lxml")
+            for tag in soup(["script", "style", "noscript"]):
+                tag.decompose()
+
+            text = soup.get_text(separator="\n")
+            lines = [ln.strip() for ln in text.splitlines()]
+            cleaned = "\n".join([ln for ln in lines if ln])
+
+            return cleaned
+
+        except Exception as e:
+            last_err = e
+            # 其它错误不一定值得重试，直接跳出也行；这里先继续尝试 2 次
+            time.sleep(0.3)
+
+    # 重试后仍失败
+    raise RuntimeError(f"Failed to fetch url after retries: {last_err}")

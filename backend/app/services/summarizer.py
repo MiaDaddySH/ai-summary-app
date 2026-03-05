@@ -31,7 +31,7 @@ def summarize_text(text: str) -> str:
             {"role": "user", "content": prompt},
         ],
         temperature=0.2,
-        max_tokens=220,
+        max_tokens=400,
     )
 
     return resp.choices[0].message.content or ""
