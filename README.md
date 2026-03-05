@@ -76,6 +76,7 @@ uvicorn app.main:app --reload
 ```
 cd mobile/ai_summary_app
 flutter run
+```
 
 
 ---
