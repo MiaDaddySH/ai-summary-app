@@ -59,6 +59,7 @@ flowchart TD
   C --> D[Azure OpenAI<br/>OpenAI-compatible endpoint]
   D --> B
   B -->|summary| A
+```
 
 ---
 
