@@ -52,16 +52,13 @@ Web Content Extraction
 
 ## Architecture
 
-Flutter App
-↓
-FastAPI Backend
-↓
-Article Fetcher
-↓
-Azure OpenAI
-↓
-Summary Response
-
+```mermaid
+flowchart TD
+  A[Flutter Mobile App] -->|POST /summarize| B[FastAPI Backend]
+  B --> C[Article Fetcher<br/>httpx + readability + bs4]
+  C --> D[Azure OpenAI<br/>OpenAI-compatible endpoint]
+  D --> B
+  B -->|summary| A
 
 ---
 
