@@ -17,6 +17,17 @@ class SummarizeResponse(BaseModel):
     source: str  # "text" or "url"
 
 
+async def summarize_with_guard(text: str) -> str:
+    try:
+        return await run_in_threadpool(summarize_text, text)
+    except RuntimeError as e:
+        msg = str(e)
+        status_code = 504 if "timeout" in msg.lower() else 502
+        raise HTTPException(status_code=status_code, detail=msg)
+    except Exception:
+        raise HTTPException(status_code=502, detail="LLM service unavailable.")
+
+
 @app.post("/summarize", response_model=SummarizeResponse)
 async def summarize(payload: SummarizeRequest = Body(...)):
     text = (payload.text or "").strip()
@@ -31,7 +42,7 @@ async def summarize(payload: SummarizeRequest = Body(...)):
                 status_code=413,
                 detail=f"Input text too long. Max {MAX_INPUT_CHARS} characters.",
             )
-        summary = await run_in_threadpool(summarize_text, text)
+        summary = await summarize_with_guard(text)
         return {"summary": summary, "source": "text"}
 
     if url:
@@ -49,7 +60,7 @@ async def summarize(payload: SummarizeRequest = Body(...)):
         if len(article_text) > MAX_INPUT_CHARS:
             article_text = article_text[:MAX_INPUT_CHARS]
 
-        summary = await run_in_threadpool(summarize_text, article_text)
+        summary = await summarize_with_guard(article_text)
         return {"summary": summary, "source": "url"}
 
     raise HTTPException(status_code=400, detail="Invalid request.")
