@@ -7,14 +7,16 @@ load_dotenv()
 DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 if not DEPLOYMENT:
     raise RuntimeError("Missing env var: AZURE_OPENAI_DEPLOYMENT")
+MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "12000"))
 
 
 def summarize_text(text: str) -> str:
     text = (text or "").strip()
     if not text:
         return "Please provide text."
+    if len(text) > MAX_INPUT_CHARS:
+        text = text[:MAX_INPUT_CHARS]
 
-    # 给模型一个更强的格式指令：输出更稳定、更像产品
     prompt = (
         "Summarize the article in English and Chinese.\n"
         "Requirements:\n"
