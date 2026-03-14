@@ -31,7 +31,7 @@ def test_rejects_text_over_limit(monkeypatch):
 
 
 def test_summarizes_text_success(monkeypatch):
-    async def fake_summarize_with_guard(text: str) -> str:
+    async def fake_summarize_with_guard(text: str, request_id: str) -> str:
         return f"summary:{text}"
 
     monkeypatch.setattr(main_module, "summarize_with_guard", fake_summarize_with_guard)
@@ -41,7 +41,7 @@ def test_summarizes_text_success(monkeypatch):
 
 
 def test_returns_fetch_error_for_bad_url(monkeypatch):
-    async def fake_fetch_article_text(url: str) -> str:
+    async def fake_fetch_article_text(url: str, timeout=None, request_id="-") -> str:
         raise RuntimeError("fetch failed")
 
     monkeypatch.setattr(main_module, "fetch_article_text", fake_fetch_article_text)
@@ -51,7 +51,7 @@ def test_returns_fetch_error_for_bad_url(monkeypatch):
 
 
 def test_rejects_short_extracted_text(monkeypatch):
-    async def fake_fetch_article_text(url: str) -> str:
+    async def fake_fetch_article_text(url: str, timeout=None, request_id="-") -> str:
         return "short text"
 
     monkeypatch.setattr(main_module, "fetch_article_text", fake_fetch_article_text)
@@ -64,10 +64,10 @@ def test_truncates_long_url_article_before_summarizing(monkeypatch):
     captured = {"text": ""}
     monkeypatch.setattr(main_module, "MAX_INPUT_CHARS", 10)
 
-    async def fake_fetch_article_text(url: str) -> str:
+    async def fake_fetch_article_text(url: str, timeout=None, request_id="-") -> str:
         return "a" * 300
 
-    async def fake_summarize_with_guard(text: str) -> str:
+    async def fake_summarize_with_guard(text: str, request_id: str) -> str:
         captured["text"] = text
         return "ok"
 
@@ -80,7 +80,7 @@ def test_truncates_long_url_article_before_summarizing(monkeypatch):
 
 
 def test_maps_llm_timeout_to_504(monkeypatch):
-    def fake_summarize_text(text: str) -> str:
+    def fake_summarize_text(text: str, request_id: str = "-") -> str:
         raise RuntimeError("LLM request timeout")
 
     monkeypatch.setattr(main_module, "summarize_text", fake_summarize_text)
@@ -90,10 +90,20 @@ def test_maps_llm_timeout_to_504(monkeypatch):
 
 
 def test_maps_llm_runtime_error_to_502(monkeypatch):
-    def fake_summarize_text(text: str) -> str:
+    def fake_summarize_text(text: str, request_id: str = "-") -> str:
         raise RuntimeError("upstream failure")
 
     monkeypatch.setattr(main_module, "summarize_text", fake_summarize_text)
     response = client.post("/summarize", json={"text": "hello"})
     assert response.status_code == 502
     assert "upstream failure" in response.json()["detail"]
+
+
+def test_response_contains_request_id(monkeypatch):
+    async def fake_summarize_with_guard(text: str, request_id: str) -> str:
+        return "ok"
+
+    monkeypatch.setattr(main_module, "summarize_with_guard", fake_summarize_with_guard)
+    response = client.post("/summarize", json={"text": "hello"})
+    assert response.status_code == 200
+    assert response.headers.get("X-Request-ID")

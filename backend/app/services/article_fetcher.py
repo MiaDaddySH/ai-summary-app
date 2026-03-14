@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import time
 import httpx
 from readability import Document
 from bs4 import BeautifulSoup
@@ -13,6 +15,7 @@ FETCH_TIMEOUT_SECONDS = settings.fetch_timeout_seconds
 FETCH_MAX_RETRIES = settings.fetch_max_retries
 FETCH_RETRY_BASE_DELAY_SECONDS = settings.fetch_retry_base_delay_seconds
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+logger = logging.getLogger("app.fetcher")
 
 
 def _is_retryable_error(err: Exception) -> bool:
@@ -23,13 +26,14 @@ def _is_retryable_error(err: Exception) -> bool:
     return False
 
 
-async def fetch_article_text(url: str, timeout: float | None = None) -> str:
+async def fetch_article_text(url: str, timeout: float | None = None, request_id: str = "-") -> str:
     url = (url or "").strip()
     if not url.startswith(("http://", "https://")):
         raise ValueError("URL must start with http:// or https://")
     request_timeout = timeout if timeout is not None else FETCH_TIMEOUT_SECONDS
 
     last_err: Exception | None = None
+    start_at = time.perf_counter()
 
     for attempt in range(FETCH_MAX_RETRIES + 1):
         try:
@@ -49,6 +53,12 @@ async def fetch_article_text(url: str, timeout: float | None = None) -> str:
                 if attempt >= FETCH_MAX_RETRIES:
                     raise err
                 last_err = err
+                logger.warning(
+                    "fetch.retry request_id=%s attempt=%s status_code=%s",
+                    request_id,
+                    attempt + 1,
+                    r.status_code,
+                )
                 delay_s = FETCH_RETRY_BASE_DELAY_SECONDS * (2 ** attempt)
                 await asyncio.sleep(delay_s)
                 continue
@@ -66,13 +76,37 @@ async def fetch_article_text(url: str, timeout: float | None = None) -> str:
             lines = [ln.strip() for ln in text.splitlines()]
             cleaned = "\n".join([ln for ln in lines if ln])
 
+            elapsed_ms = int((time.perf_counter() - start_at) * 1000)
+            logger.info(
+                "fetch.success request_id=%s attempts=%s elapsed_ms=%s text_chars=%s",
+                request_id,
+                attempt + 1,
+                elapsed_ms,
+                len(cleaned),
+            )
             return cleaned
 
         except Exception as e:
             last_err = e
-            if attempt >= FETCH_MAX_RETRIES or not _is_retryable_error(e):
+            retryable = _is_retryable_error(e)
+            logger.warning(
+                "fetch.error request_id=%s attempt=%s retryable=%s error_type=%s",
+                request_id,
+                attempt + 1,
+                retryable,
+                type(e).__name__,
+            )
+            if attempt >= FETCH_MAX_RETRIES or not retryable:
                 break
             delay_s = FETCH_RETRY_BASE_DELAY_SECONDS * (2 ** attempt)
             await asyncio.sleep(delay_s)
 
+    elapsed_ms = int((time.perf_counter() - start_at) * 1000)
+    logger.error(
+        "fetch.failed request_id=%s attempts=%s elapsed_ms=%s error=%s",
+        request_id,
+        FETCH_MAX_RETRIES + 1,
+        elapsed_ms,
+        last_err,
+    )
     raise RuntimeError(f"Failed to fetch url after retries: {last_err}")
