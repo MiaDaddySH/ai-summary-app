@@ -1,18 +1,13 @@
-import os
 import time
-from dotenv import load_dotenv
 from openai import APIConnectionError, APIStatusError, APITimeoutError, RateLimitError
 from .llm_client import client
+from app.settings import settings
 
-load_dotenv()
-
-DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-if not DEPLOYMENT:
-    raise RuntimeError("Missing env var: AZURE_OPENAI_DEPLOYMENT")
-MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "12000"))
-LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
-LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
-LLM_RETRY_BASE_DELAY_SECONDS = float(os.getenv("LLM_RETRY_BASE_DELAY_SECONDS", "1.0"))
+DEPLOYMENT = settings.azure_openai_deployment
+MAX_INPUT_CHARS = settings.max_input_chars
+LLM_TIMEOUT_SECONDS = settings.llm_timeout_seconds
+LLM_MAX_RETRIES = settings.llm_max_retries
+LLM_RETRY_BASE_DELAY_SECONDS = settings.llm_retry_base_delay_seconds
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 

@@ -1,12 +1,12 @@
-import os
 from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 from app.services.summarizer import summarize_text
 from app.services.article_fetcher import fetch_article_text
+from app.settings import settings
 
 app = FastAPI(title="AI Summary API (Azure OpenAI)")
-MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "12000"))
+MAX_INPUT_CHARS = settings.max_input_chars
 
 class SummarizeRequest(BaseModel):
     text: str | None = None

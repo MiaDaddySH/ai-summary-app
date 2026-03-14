@@ -1,20 +1,17 @@
 import asyncio
-import os
 import httpx
-from dotenv import load_dotenv
 from readability import Document
 from bs4 import BeautifulSoup
-
-load_dotenv()
+from app.settings import settings
 
 DEFAULT_HEADERS = {
     "User-Agent": "AI-Summary-App/0.1 (contact: your-email@example.com)",
     "Accept": "text/html,application/xhtml+xml",
     "Accept-Language": "en-US,en;q=0.9",
 }
-FETCH_TIMEOUT_SECONDS = float(os.getenv("FETCH_TIMEOUT_SECONDS", "15"))
-FETCH_MAX_RETRIES = int(os.getenv("FETCH_MAX_RETRIES", "2"))
-FETCH_RETRY_BASE_DELAY_SECONDS = float(os.getenv("FETCH_RETRY_BASE_DELAY_SECONDS", "1.0"))
+FETCH_TIMEOUT_SECONDS = settings.fetch_timeout_seconds
+FETCH_MAX_RETRIES = settings.fetch_max_retries
+FETCH_RETRY_BASE_DELAY_SECONDS = settings.fetch_retry_base_delay_seconds
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
